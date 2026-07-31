@@ -1,34 +1,25 @@
-# Android WebView Test App
+# GlowWords for Android
 
-A small Android WebView test harness with:
+A focused Android shell for [GlowWords](https://glow.chrisawad.com). The app
+opens the game directly in a full-window WebView with no browser or test
+controls.
 
-- Editable URL field
-- Back, forward, and reload controls
-- JavaScript and DOM storage enabled
-- Cookie and third-party cookie support
-- Page progress and status display
-- Console messages written to Logcat under `WebViewConsole`
-- HTTP and WebView errors written to Logcat under `WebViewTest`
-- Chrome remote debugging enabled in debug builds
-- HTTP enabled for local development testing
-- SSL certificate errors rejected
-- Non-HTTP(S) links delegated to Android
+- Application ID: `com.chrisawad.glowwords`
+- JavaScript, DOM storage, sound, and microphone-backed word practice enabled
+- Android back gesture/button navigates WebView history
+- Non-HTTP(S) links are delegated to the appropriate Android app
+- HTTPS-only networking with SSL certificate errors rejected
 
 ## Run
 
 1. Open the project in a current Android Studio release.
-2. Allow Gradle sync to install Android SDK 37 if necessary.
+2. Allow Gradle sync to install Android SDK 36 if necessary.
 3. Run the `app` configuration on an emulator or device.
 
-## Local development URLs
+## Build
 
-- Android emulator to host machine: `http://10.0.2.2:PORT`
-- Physical device: use your computer's LAN IP and bind the server to `0.0.0.0`
+```bash
+gradle --no-daemon assembleDebug
+```
 
-## Inspect the WebView
-
-With a debug build running and USB debugging enabled, open `chrome://inspect/#devices` in desktop Chrome.
-
-## Security note
-
-This is a development test harness. Cleartext HTTP and third-party cookies are deliberately enabled. Do not reuse those settings unchanged in a production app.
+The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.

@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WebView Test</string>
-    <string name="url_hint">https://example.com</string>
-    <string name="go">Go</string>
-    <string name="back">Back</string>
-    <string name="forward">Forward</string>
-    <string name="reload">Reload</string>
-    <string name="status_ready">Ready</string>
+    <string name="app_name">Glow Words</string>
 </resources>

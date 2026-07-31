@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.webviewtest"
+    namespace = "com.chrisawad.glowwords"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.webviewtest"
+        applicationId = "com.chrisawad.glowwords"
         minSdk = 23
         targetSdk = 36
         versionCode = 1
