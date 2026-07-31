@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "WebViewTest"
         private const val CONSOLE_TAG = "WebViewConsole"
-        private const val DEFAULT_URL = "https://example.com"
+        private const val DEFAULT_URL = "https://glow.chrisawad.com"
         private val SCHEME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
     }
 }
