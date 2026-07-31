@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WebViewTest"
+rootProject.name = "GlowWordsAndroid"
 include(":app")
