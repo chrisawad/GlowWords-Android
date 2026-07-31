@@ -35,12 +35,75 @@ jobs:
         with:
           gradle-version: "9.5.1"
 
-      - name: Build debug APK
+      - name: Build pull request debug APK
+        if: github.event_name == 'pull_request'
         run: gradle --no-daemon assembleDebug
 
-      - name: Upload APK
+      - name: Upload pull request debug APK
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: GlowWords-Android-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Prepare stable release keystore
+        if: github.event_name != 'pull_request'
+        env:
+          GLOWWORDS_KEYSTORE_BASE64: ${{ secrets.GLOWWORDS_KEYSTORE_BASE64 }}
+          GLOWWORDS_KEYSTORE_PASSWORD: ${{ secrets.GLOWWORDS_KEYSTORE_PASSWORD }}
+          GLOWWORDS_KEY_ALIAS: ${{ secrets.GLOWWORDS_KEY_ALIAS }}
+          GLOWWORDS_KEY_PASSWORD: ${{ secrets.GLOWWORDS_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for secret_name in \
+            GLOWWORDS_KEYSTORE_BASE64 \
+            GLOWWORDS_KEYSTORE_PASSWORD \
+            GLOWWORDS_KEY_ALIAS \
+            GLOWWORDS_KEY_PASSWORD
+          do
+            if [[ -z "${!secret_name}" ]]; then
+              echo "::error::Missing repository secret: ${secret_name}"
+              exit 1
+            fi
+          done
+          printf '%s' "$GLOWWORDS_KEYSTORE_BASE64" \
+            | base64 --decode > "$RUNNER_TEMP/glowwords-release.p12"
+          chmod 600 "$RUNNER_TEMP/glowwords-release.p12"
+
+      - name: Build stable signed release APK
+        if: github.event_name != 'pull_request'
+        env:
+          GLOWWORDS_KEYSTORE_PATH: ${{ runner.temp }}/glowwords-release.p12
+          GLOWWORDS_KEYSTORE_PASSWORD: ${{ secrets.GLOWWORDS_KEYSTORE_PASSWORD }}
+          GLOWWORDS_KEY_ALIAS: ${{ secrets.GLOWWORDS_KEY_ALIAS }}
+          GLOWWORDS_KEY_PASSWORD: ${{ secrets.GLOWWORDS_KEY_PASSWORD }}
+          GLOWWORDS_VERSION_CODE: ${{ github.run_number }}
+          GLOWWORDS_VERSION_NAME: 1.0.${{ github.run_number }}
+        run: gradle --no-daemon assembleRelease
+
+      - name: Verify stable release signature
+        if: github.event_name != 'pull_request'
+        env:
+          EXPECTED_SIGNER_SHA256: cfa149cbd3b260951c1ea85528a2a004ae2ecc4879550041f2f2a779f817a3dc
+        run: |
+          set -euo pipefail
+          verification_output=$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify \
+            --verbose \
+            --print-certs \
+            app/build/outputs/apk/release/app-release.apk)
+          printf '%s\n' "$verification_output"
+          actual_signer_sha256=$(printf '%s\n' "$verification_output" \
+            | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+          if [[ "$actual_signer_sha256" != "$EXPECTED_SIGNER_SHA256" ]]; then
+            echo "::error::Release APK signer does not match the stable GlowWords certificate"
+            exit 1
+          fi
+
+      - name: Upload stable release APK
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlowWords-Android-release
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
