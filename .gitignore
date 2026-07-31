@@ -5,3 +5,7 @@ build/
 */build/
 *.iml
 .DS_Store
+.signing/
+*.jks
+*.keystore
+*.p12
