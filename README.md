@@ -5,7 +5,9 @@ opens the game directly in a full-window WebView with no browser or test
 controls.
 
 - Application ID: `com.chrisawad.glowwords`
-- JavaScript, DOM storage, sound, and microphone-backed word practice enabled
+- JavaScript and DOM storage enabled
+- Android text-to-speech fallback for word and letter playback in WebView
+- Microphone-backed word practice enabled for the deployed GitHub Pages origin
 - Android back gesture/button navigates WebView history
 - Non-HTTP(S) links are delegated to the appropriate Android app
 - HTTPS-only networking with SSL certificate errors rejected
