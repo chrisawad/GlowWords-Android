@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.media.AudioAttributes
 import android.net.Uri
 import android.net.http.SslError
@@ -98,6 +99,11 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         webView.saveState(outState)
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        webView.invalidate()
     }
 
     override fun onResume() {
