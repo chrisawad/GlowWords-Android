@@ -9,3 +9,4 @@ build/
 *.jks
 *.keystore
 *.p12
+/GlowWords-Play-Store-Package.zip
