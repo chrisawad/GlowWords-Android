@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Android artifacts
 
 on:
   push:
@@ -35,9 +35,12 @@ jobs:
         with:
           gradle-version: "9.5.1"
 
-      - name: Build pull request debug APK
+      - name: Verify Play Store assets
+        run: java play-store/tools/VerifyStoreAssets.java .
+
+      - name: Build pull request debug APK and app bundle
         if: github.event_name == 'pull_request'
-        run: gradle --no-daemon assembleDebug
+        run: gradle --no-daemon assembleDebug bundleDebug
 
       - name: Upload pull request debug APK
         if: github.event_name == 'pull_request'
@@ -71,7 +74,7 @@ jobs:
             | base64 --decode > "$RUNNER_TEMP/glowwords-release.p12"
           chmod 600 "$RUNNER_TEMP/glowwords-release.p12"
 
-      - name: Build stable signed release APK
+      - name: Build stable signed release APK and app bundle
         if: github.event_name != 'pull_request'
         env:
           GLOWWORDS_KEYSTORE_PATH: ${{ runner.temp }}/glowwords-release.p12
@@ -80,11 +83,12 @@ jobs:
           GLOWWORDS_KEY_PASSWORD: ${{ secrets.GLOWWORDS_KEY_PASSWORD }}
           GLOWWORDS_VERSION_CODE: ${{ github.run_number }}
           GLOWWORDS_VERSION_NAME: 1.0.${{ github.run_number }}
-        run: gradle --no-daemon assembleRelease
+        run: gradle --no-daemon assembleRelease bundleRelease
 
       - name: Verify stable release signature
         if: github.event_name != 'pull_request'
         env:
+          GLOWWORDS_KEYSTORE_PASSWORD: ${{ secrets.GLOWWORDS_KEYSTORE_PASSWORD }}
           EXPECTED_SIGNER_SHA256: cfa149cbd3b260951c1ea85528a2a004ae2ecc4879550041f2f2a779f817a3dc
         run: |
           set -euo pipefail
@@ -100,10 +104,27 @@ jobs:
             exit 1
           fi
 
-      - name: Upload stable release APK
+          jarsigner -verify -strict \
+            -keystore "$RUNNER_TEMP/glowwords-release.p12" \
+            -storetype PKCS12 \
+            -storepass:env GLOWWORDS_KEYSTORE_PASSWORD \
+            app/build/outputs/bundle/release/app-release.aab
+          actual_bundle_signer_sha256=$(keytool -printcert \
+            -jarfile app/build/outputs/bundle/release/app-release.aab \
+            | sed -n 's/^[[:space:]]*SHA256: //p' \
+            | tr -d ':' \
+            | tr '[:upper:]' '[:lower:]')
+          if [[ "$actual_bundle_signer_sha256" != "$EXPECTED_SIGNER_SHA256" ]]; then
+            echo "::error::Release app bundle signer does not match the stable GlowWords certificate"
+            exit 1
+          fi
+
+      - name: Upload stable release artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: GlowWords-Android-release
-          path: app/build/outputs/apk/release/app-release.apk
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
